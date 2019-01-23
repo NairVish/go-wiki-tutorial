@@ -59,19 +59,13 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func saveHandler(w http.ResponseWriter, r *http.Request) {
-	title := r.URL.Path[len("/view/"):]
-	err := r.ParseForm()
-	if err != nil {
-		fmt.Fprintf(w, "<h1>An error occurred while attempting to save: %s</h1><div>%s</div>", title, err)
-		return
-	}
-	body := r.Form.Get("body")
+	title := r.URL.Path[len("/save/"):]
+	body := r.FormValue("body")
 	pg := &Page{Title: title, Body: []byte(body)}
-	err = pg.save()
+	err := pg.save()
 	if err != nil {
 		fmt.Fprintf(w, "<h1>An error occurred while attempting to save: %s</h1><div>%s</div>", title, err)
-		return
 	} else {
-		fmt.Fprintf(w, "<h1>Post saved!</h1>", title)
+		http.Redirect(w, r, "/view/"+title, http.StatusFound)
 	}
 }
