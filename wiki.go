@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
+	"net/http"
 )
 
 type Page struct {
@@ -25,8 +27,16 @@ func loadPage(title string) (*Page, error) {
 }
 
 func main() {
-	p1 := &Page{Title: "TestPage", Body: []byte("This is a sample post.")}
-	p1.save()
-	p2, _ := loadPage("TestPage")
-	fmt.Println(string(p2.Body))
+	http.HandleFunc("/view/", viewHandler)
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func viewHandler(w http.ResponseWriter, r *http.Request) {
+	title := r.URL.Path[len("/view/"):]
+	p, err := loadPage(title)
+	if err != nil {
+		fmt.Fprintf(w, "<h1>An error occurred while retrieving: %s</h1>", title)
+	} else {
+		fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
+	}
 }
