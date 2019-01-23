@@ -43,7 +43,8 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Path[len("/view/"):]
 	p, err := loadPage(title)
 	if err != nil {
-		fmt.Fprintf(w, "<h1>An error occurred while retrieving: %s</h1><div>%s</div>", title, err.Error())
+		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
+		return
 	}
 	renderTemplate(w, "view", p)
 }
