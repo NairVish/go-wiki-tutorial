@@ -63,7 +63,12 @@ func editHandler(w http.ResponseWriter, r *http.Request, title string) {
 }
 
 func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
-	// TODO: Handle direct access to URL.
+	// handle direct access to URL.
+	if r.Method != http.MethodPost {
+		http.Error(w, "400 - Bad method type", http.StatusBadRequest)
+		return
+	}
+
 	body := r.FormValue("body")
 	pg := &Page{Title: title, Body: []byte(body)}
 	err := pg.save()
