@@ -17,6 +17,11 @@
     </nav>
 
     <div class="container" style="padding: 3rem 1.5rem;">
+        {{if .FromSave}}
+            <div class="alert alert-success" role="alert">
+                The post was saved!
+            </div>
+        {{end}}
         <h1>{{.Title}}</h1>
         <p><a href="/edit/{{.Title}}" class="btn btn-dark">Edit</a></p>
         <div>{{.DispBody}}</div>

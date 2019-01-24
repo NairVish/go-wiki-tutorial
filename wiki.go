@@ -17,6 +17,7 @@ type Page struct {
 	Title    string
 	Body     []byte
 	DispBody template.HTML
+	FromSave bool
 }
 
 func (p *Page) save() error {
@@ -47,6 +48,14 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 
 func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
 	p, err := loadPage(title)
+
+	// show success message for save
+	q := r.URL.Query()
+	b := q.Get("from_save")
+	if b == "true" {
+		p.FromSave = true
+	}
+
 	if err != nil {
 		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
 		return
@@ -76,7 +85,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, "/view/"+title, http.StatusFound)
+	http.Redirect(w, r, "/view/"+title+"?from_save=true", http.StatusFound)
 }
 
 func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
