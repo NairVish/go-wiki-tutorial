@@ -33,13 +33,13 @@ func (p *Page) save() error {
 func loadPage(title string) (*Page, error) {
 	filename := "data/" + title + ".txt"
 	body, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
 	dispBody := template.HTML(interPageLink.ReplaceAllFunc(body, func(match []byte) []byte {
 		name := string(match[1 : len(match)-1]) // remove opening and closing brackets
 		return []byte(fmt.Sprintf("<a href=\"/view/%s\">%s</a>", name, name))
 	}))
-	if err != nil {
-		return nil, err
-	}
 	return &Page{Title: title, Body: body, DispBody: dispBody}, nil
 }
 
@@ -56,17 +56,15 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 // the handler redirects to the edit endpoint.
 func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
 	p, err := loadPage(title)
-
+	if err != nil {
+		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
+		return
+	}
 	// show success message for save
 	q := r.URL.Query()
 	b := q.Get("from_save")
 	if b == "true" {
 		p.FromSave = true
-	}
-
-	if err != nil {
-		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
-		return
 	}
 	renderTemplate(w, "view", p)
 }
