@@ -21,7 +21,7 @@ type Page struct {
 	Body       []byte        // page body
 	DispBody   template.HTML // page body in displayable form (i.e., links expanded out)
 	FromSave   bool          // whether or not this page object was created following a save operation
-	FromDelete bool
+	FromDelete bool          // whether or not we were redirected following a delete operation
 }
 
 // Page.save() saves a Page's title and body into a simple text file in the data/ folder.
