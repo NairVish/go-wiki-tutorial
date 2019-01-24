@@ -7,19 +7,21 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 )
 
 var templates = template.Must(template.ParseFiles("tmpl/edit.html", "tmpl/view.html"))
-var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
+var validPath = regexp.MustCompile("^/(edit|save|view|delete)/([a-zA-Z0-9]+)$")
 var interPageLink = regexp.MustCompile(`\[([a-zA-Z0-9]*)\]`)
 
 // Page represents a single page/article in this wiki.
 type Page struct {
-	Title    string        // page title
-	Body     []byte        // page body
-	DispBody template.HTML // page body in displayable form (i.e., links expanded out)
-	FromSave bool          // whether or not this page object was created following a save operation
+	Title      string        // page title
+	Body       []byte        // page body
+	DispBody   template.HTML // page body in displayable form (i.e., links expanded out)
+	FromSave   bool          // whether or not this page object was created following a save operation
+	FromDelete bool
 }
 
 // Page.save() saves a Page's title and body into a simple text file in the data/ folder.
@@ -60,12 +62,17 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
 		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
 		return
 	}
-	// show success message for save
+	// show success message for save or delete
 	q := r.URL.Query()
 	b := q.Get("from_save")
 	if b == "true" {
 		p.FromSave = true
 	}
+	b = q.Get("from_delete")
+	if b == "true" {
+		p.FromDelete = true
+	}
+
 	renderTemplate(w, "view", p)
 }
 
@@ -98,6 +105,28 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	http.Redirect(w, r, "/view/"+title+"?from_save=true", http.StatusFound)
 }
 
+// deleteHandler handles requests to delete a page. Only POST requests are accepted. The user is redirected to the
+// front page upon deletion.
+func deleteHandler(w http.ResponseWriter, r *http.Request, title string) {
+	// handle direct access to URL.
+	if r.Method != http.MethodPost {
+		http.Error(w, "400 - Bad method type", http.StatusBadRequest)
+		return
+	}
+
+	_, err := loadPage(title)
+	if err != nil {
+		http.Error(w, "400 - Page does not exist!", http.StatusBadRequest)
+		return
+	}
+
+	err = os.Remove("data/" + title + ".txt")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	http.Redirect(w, r, "/view/FrontPage?from_delete=true", http.StatusFound)
+}
+
 // makeHandler converts existing functions that accept (w http.ResponseWriter, r *http.Request, title string) into
 // handlers compatible with http.HandlerFunc, with parameters (w http.ResponseWriter, r *http.Request), by parsing out
 // the name of the desired file/page title from the requests's URL and passing it into these existing functions.
@@ -124,5 +153,6 @@ func main() {
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
+	http.HandleFunc("/delete/", makeHandler(deleteHandler))
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

@@ -8,6 +8,12 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
 
+    <style>
+        form {
+            display: inline-block;
+        }
+    </style>
+
     <title>{{.Title}}</title>
 </head>
 <body>
@@ -22,8 +28,16 @@
                 The post was saved!
             </div>
         {{end}}
+        {{if .FromDelete}}
+            <div class="alert alert-success" role="alert">
+                The post was deleted!
+            </div>
+        {{end}}
         <h1>{{.Title}}</h1>
-        <p><a href="/edit/{{.Title}}" class="btn btn-dark">Edit</a></p>
+        <p>
+            <form action="/edit/{{.Title}}" method="get"><input type="submit" value="Edit" class="btn btn-dark"></form>
+            <form action="/delete/{{.Title}}" method="post"><input type="submit" value="Delete" class="btn btn-danger"></form>
+        </p>
         <div>{{.DispBody}}</div>
     </div>
 
