@@ -116,7 +116,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request, title string) {
 
 	_, err := loadPage(title)
 	if err != nil {
-		http.Error(w, "400 - Page does not exist!", http.StatusBadRequest)
+		http.Error(w, "404 - Page not found", http.StatusNotFound)
 		return
 	}
 
