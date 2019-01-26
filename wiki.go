@@ -47,8 +47,7 @@ func loadPage(title string) (*Page, error) {
 
 // renderTemplate renders the desired template using Page data and writes the resulting response into a ResponseWriter.
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-	err := templates.ExecuteTemplate(w, tmpl+".html", p)
-	if err != nil {
+	if err := templates.ExecuteTemplate(w, tmpl+".html", p); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -64,12 +63,10 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
 	}
 	// show success message for save or delete
 	q := r.URL.Query()
-	b := q.Get("from_save")
-	if b == "true" {
+	if b := q.Get("from_save"); b == "true" {
 		p.FromSave = true
 	}
-	b = q.Get("from_delete")
-	if b == "true" {
+	if b := q.Get("from_delete"); b == "true" {
 		p.FromDelete = true
 	}
 
@@ -97,8 +94,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 
 	body := r.FormValue("body")
 	pg := &Page{Title: title, Body: []byte(body)}
-	err := pg.save()
-	if err != nil {
+	if err := pg.save(); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -114,15 +110,14 @@ func deleteHandler(w http.ResponseWriter, r *http.Request, title string) {
 		return
 	}
 
-	_, err := loadPage(title)
-	if err != nil {
+	if _, err := loadPage(title); err != nil {
 		http.Error(w, "404 - Page not found", http.StatusNotFound)
 		return
 	}
 
-	err = os.Remove("data/" + title + ".txt")
-	if err != nil {
+	if err := os.Remove("data/" + title + ".txt"); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	http.Redirect(w, r, "/view/FrontPage?from_delete=true", http.StatusFound)
 }
